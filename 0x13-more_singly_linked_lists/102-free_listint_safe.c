@@ -1,72 +1,47 @@
+
+
 #include "lists.h"
 
 /**
- * free_listp2 - frees a linked list
- * @head: head of a list.
+ * free_listint_safe - free all elements in a linked list
+ * @head: a pointer to the first node
  *
- * Return: no return.
+ * Description: This function frees each node in a linked list, stopping if
+ * it encounters a loop. To identify a loop, it constructs it's own list,
+ * and if memory allocation fails, it causes the process to terminate with
+ * the status value 98
+ *
+ * Return: the size of the list that was freed
  */
-void free_listp2(listp_t **head)
+size_t free_listint_safe(listint_t **head)
 {
-	listp_t *temp;
-	listp_t *curr;
+	listptr_t *listptr_head = NULL;
+	listint_t *next;
+	size_t size;
 
-	if (head != NULL)
+	if (!head)
+		return (0);
+
+	for (size = 0; *head; ++size)
 	{
-		curr = *head;
-		while ((temp = curr) != NULL)
+		if (listptr_contains(listptr_head, *head))
 		{
-			curr = curr->next;
-			free(temp);
+			*head = NULL;
+			break;
 		}
-		*head = NULL;
-	}
-}
 
-/**
- * free_listint_safe - frees a linked list.
- * @h: head of a list.
- *
- * Return: size of the list that was freed.
- */
-size_t free_listint_safe(listint_t **h)
-{
-	size_t nnodes = 0;
-	listp_t *hptr, *new, *add;
-	listint_t *curr;
-
-	hptr = NULL;
-	while (*h != NULL)
-	{
-		new = malloc(sizeof(listp_t));
-
-		if (new == NULL)
+		if (!add_nodeptr(&listptr_head, *head))
+		{
+			free_listptr(listptr_head);
 			exit(98);
-
-		new->p = (void *)*h;
-		new->next = hptr;
-		hptr = new;
-
-		add = hptr;
-
-		while (add->next != NULL)
-		{
-			add = add->next;
-			if (*h == add->p)
-			{
-				*h = NULL;
-				free_listp2(&hptr);
-				return (nnodes);
-			}
 		}
 
-		curr = *h;
-		*h = (*h)->next;
-		free(curr);
-		nnodes++;
+		next = (*head)->next;
+		free(*head);
+		*head = next;
 	}
 
-	*h = NULL;
-	free_listp2(&hptr);
-	return (nnodes);
+	free_listptr(listptr_head);
+
+	return (size);
 }
